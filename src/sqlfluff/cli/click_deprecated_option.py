@@ -34,8 +34,7 @@ class DeprecatedOption(click.Option):
 
     def __init__(self, *args, **kwargs):
         self.deprecated = kwargs.pop("deprecated", ())
-        self.preferred = args[0][-1]
-
+        self.preferred = kwargs.pop("preferred", None)
         super().__init__(*args, **kwargs)
 
 
@@ -72,10 +71,9 @@ class DeprecatedOptionsCommand(click.Command):
         deprecated = getattr(an_option.obj, "deprecated", None)
         preferred = getattr(an_option.obj, "preferred", None)
 
+        # 如果没有 deprecated 属性，直接返回原始 process，不 raise
         if not deprecated:
-            raise ValueError(
-                f"Expected `deprecated` value for `{an_option.obj.name!r}`"
-            )
+            return orig_process
 
         def process(value: Any, state: ParsingState) -> None:
             """Custom process method.
@@ -83,7 +81,6 @@ class DeprecatedOptionsCommand(click.Command):
             The function above us on the stack used 'opt' to
             pick option from a dict, see if it is deprecated.
             """
-            # reach up the stack and get 'opt'
             import inspect
 
             frame = inspect.currentframe()

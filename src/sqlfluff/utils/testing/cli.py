@@ -1,5 +1,6 @@
 """Testing utils for working with the CLIs."""
 from click.testing import CliRunner
+import inspect
 
 
 def invoke_assert_code(
@@ -15,7 +16,11 @@ def invoke_assert_code(
     kwargs = kwargs or {}
     if cli_input:
         kwargs["input"] = cli_input
-    runner = CliRunner(mix_stderr=mix_stderr)
+    # 动态构造参数字典，只在支持时传递 mix_stderr
+    runner_kwargs = {}
+    if "mix_stderr" in inspect.signature(CliRunner.__init__).parameters:
+        runner_kwargs["mix_stderr"] = mix_stderr
+    runner = CliRunner(**runner_kwargs)
     result = runner.invoke(*args, **kwargs)
     # Output the CLI code for debugging
     print(result.output)

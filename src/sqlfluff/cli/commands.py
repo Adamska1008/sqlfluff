@@ -503,6 +503,7 @@ def dump_file_payload(filename: Optional[str], payload: str):
     help="Disables progress bars.",
     cls=DeprecatedOption,
     deprecated=["--disable_progress_bar"],
+    preferred="--disable-progress-bar",
 )
 @click.option(
     "--persist-timing",
