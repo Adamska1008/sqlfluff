@@ -1,0 +1,2 @@
+path,source_chars,templated_chars,segments,raw_segments,templating,lexing,parsing,linting
+test/fixtures/cli/passing_a.sql,44,44,35,22,0.001203642001200933,0.0005594869999185903,0.01894744399942283,0.021669517998816445
