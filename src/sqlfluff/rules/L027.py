@@ -2,7 +2,7 @@
 
 from sqlfluff.core.rules.base import LintResult
 from sqlfluff.rules.L020 import Rule_L020
-
+from lambdai import AI
 
 class Rule_L027(Rule_L020):
     """References should be qualified if select has more than one referenced table/view.
@@ -73,4 +73,17 @@ class Rule_L027(Rule_L020):
                     )
                 )
 
+        with AI:
+            result: LintResult | None = AI.execute(
+                "首先从{table_aliases}和{standalone_aliases}中获取所有的aliases。"
+                "如果引用带前缀，即{this_ref_type}是'qualified'的，就从{r}中取出前缀，检查它是否在已有的aliases中。"
+                "如果不符合，则返回一个LintResult来描述这个错误，它的cnchor是这个r。",
+                table_aliases,
+                standalone_aliases,
+                this_ref_type,
+                r
+            )
+            if result:
+                violation_buff.append(result)
+                
         return violation_buff or None

@@ -1,1 +1,205 @@
+2025-06-28 18:26:21.986 | DEBUG    | codeblock.py:31 - Initializing code block
+2025-06-28 18:26:22.072 | DEBUG    | cr.py:52 - Checkpoint: waiting for child 2856
+2025-06-28 18:26:22.074 | DEBUG    | cr.py:40 - Checkpoint: child 2856 started
+2025-06-28 18:26:25.456 | INFO     | codes.py:27 - Initial classes: [None, <class 'list'>, <class 'str'>, <class 'sqlfluff.dialects.dialect_ansi.ColumnReferenceSegment'>, list[sqlfluff.core.dialects.common.AliasInfo[str]]]
+2025-06-28 18:26:38.054 | DEBUG    | render.py:102 - Synthesize prompt: 
+# Task
+You are required to synthesize a python function to finish the following task. The 'target' is user's attention.
+
+## Target
+首先从{table_aliases}和{standalone_aliases}中获取所有的aliases。如果引用带前缀，即{this_ref_type}是'qualified'的，就从{r}中取出前缀，检查它是否在已有的aliases中。如果不符合，则返回一个LintResult来描述这个错误，它的cnchor是这个r。
+
+## Example
+
+### Example 1
+```python
+def hello_lambdai():
+    """
+    Write a function to print "Hello, World!"
+    """
+    print("Hello, World!")
+```
+
+### Example 2
+The helper function like `fibonacci` is defined in the top function, rather than in the global scope.
+
+```python
+def fibonacci_sum_lambdai(a, b):
+    """
+    Calculate the sum of two numbers of Fibonacci sequence
+    """
+    def fibonacci(n):
+        if n <= 0:
+            return 0
+        elif n == 1:
+            return 1
+        else:
+            return fibonacci(n-1) + fibonacci(n-2)
+    return fibonacci(a) + fibonacci(b)
+```
+
+### Example 3
+The import statement should in the function, rather than in the global scope.
+
+```python
+def calculate_square_lambdai(a, b):
+    """
+    Calculate the square of two numbers
+    """
+    import math
+    return math.sqrt(a) + math.sqrt(b)
+```
+
+## Function Signature
+
+You must keep the function signature, keeping the function arguments number unchanged. 
+
+def function_name(arg_0: list, arg_1: list, arg_2: str, arg_3: ColumnReferenceSegment) -> LintResult | None:
+    """
+    首先从{table_aliases}和{standalone_aliases}中获取所有的aliases。如果引用带前缀，即{this_ref_type}是'qualified'的，就从{r}中取出前缀，检查它是否在已有的aliases中。如果不符合，则返回一个LintResult来描述这个错误，它的cnchor是这个r。
+    """
+
+## Argument Content
+The arguments content are like:
+arg_0: [AliasInfo(ref_str='a', segment=<CodeSegment: ([L:  2, P: 11]) 'a'>, aliased=True, from_expression_e...
+arg_1: []
+arg_2: unqualified
+arg_3: <ColumnReferenceSegment: ([L:  2, P: 35])>
+
+## Relevant Code
+
+Here are some code you can use:
+<class: list>
+
+</class>
+
+<class: str>
+
+</class>
+
+<class: ColumnReferenceSegment>
+class ColumnReferenceSegment(ObjectReferenceSegment):
+    """A reference to column, field or alias."""
+
+    type = "column_reference"
+
+</class>
+
+<class: list>
+
+</class>
+
+<class: LintResult>
+class LintResult:
+    """A class to hold the results of a rule evaluation.
+
+    Args:
+        anchor (:obj:`BaseSegment`, optional): A segment which represents
+            the *position* of the a problem. NB: Each fix will also hold
+            its own reference to position, so this position is mostly for
+            alerting the user to where the *problem* is.
+        fixes (:obj:`list` of :obj:`LintFix`, optional): An array of any
+            fixes which would correct this issue. If not present then it's
+            assumed that this issue will have to manually fixed.
+        memory (:obj:`dict`, optional): An object which stores any working
+            memory for the rule. The `memory` returned in any `LintResult`
+            will be passed as an input to the next segment to be crawled.
+        description (:obj:`str`, optional): A description of the problem
+            identified as part of this result. This will override the
+            description of the rule as what gets reported to the user
+            with the problem if provided.
+
+    """
+
+    def __init__(
+        self,
+        anchor: Optional[BaseSegment] = None,
+        fixes: Optional[List["LintFix"]] = None,
+        memory=None,
+        description=None,
+    ):
+        # An anchor of none, means no issue
+        self.anchor = anchor
+        # Fixes might be blank
+        self.fixes = fixes or []
+        # When instantiating the result, we filter any fixes which are "trivial".
+        self.fixes = [f for f in self.fixes if not f.is_trivial()]
+        # Memory is passed back in the linting result
+        self.memory = memory
+        # store a description_override for later
+        self.description = description
+
+    def to_linting_error(self, rule) -> Optional[SQLLintError]:
+        """Convert a linting result to a :exc:`SQLLintError` if appropriate."""
+        if self.anchor:
+            # Allow description override from the LintResult
+            description = self.description or rule.description
+            return SQLLintError(
+                rule=rule,
+                segment=self.anchor,
+                fixes=self.fixes,
+                description=description,
+            )
+        else:
+            return None
+
+</class>
+
+## Rules
+- Only generate a top function, other functions should be in the function.
+- You should not define any classes in the global scope.
+- Code provided in the `Relevant Code` section have been defined in the global scope. You can use them directly.
+- Code provided in the `Relevant Code` sectioN must not be redefined in your generated code.
+- You can rename function name and arguments name.
+- The function name must end with `_lambdai`.
+- Type annotation in function signature is should be wrapped by like `'type'`
+- Do not hanlde any exception in the function if not explicitly required.
+- import statement should be in the function, not in the global scope.
+- word wrapped by `{}` in the target will be the function arguments name. And must keep the order of the arguments appeared in the target.
+
+Analysis the target and return the python code in the following format:
+
+```python
+<python code>
+```
+
+2025-06-28 18:26:58.648 | DEBUG    | render.py:104 - Synthesize code: 
+def check_alias_reference_lambdai(table_aliases: 'list', standalone_aliases: 'list', this_ref_type: 'str', r: 'ColumnReferenceSegment') -> 'LintResult | None':
+    """
+    首先从{table_aliases}和{standalone_aliases}中获取所有的aliases。如果引用带前缀，即{this_ref_type}是'qualified'的，就从{r}中取出前缀，检查它是否在已有的aliases中。如果不符合，则返回一个LintResult来描述这个错误，它的cnchor是这个r。
+    """
+    from typing import List
     
+    # Combine all aliases from both sources
+    all_aliases = []
+    for alias_info in table_aliases:
+        all_aliases.append(alias_info.ref_str)
+    for alias_info in standalone_aliases:
+        all_aliases.append(alias_info.ref_str)
+    
+    # Only check qualified references
+    if this_ref_type == 'qualified':
+        # Get the prefix from the column reference
+        prefix = r.get_identifier().parts[0]
+        
+        # Check if prefix exists in the combined aliases
+        if prefix not in all_aliases:
+            return LintResult(
+                anchor=r,
+                description=f"Invalid table alias '{prefix}'. Available aliases: {', '.join(all_aliases)}"
+            )
+    
+    # Return None if no issues found
+    return None
+2025-06-28 18:27:01.944 | DEBUG    | parse.py:48 - Extracted function names: ['check_alias_reference_lambdai']
+2025-06-28 18:27:01.944 | DEBUG    | parse.py:59 - Function parameters: ['table_aliases', 'standalone_aliases', 'this_ref_type', 'r']
+2025-06-28 18:27:01.944 | DEBUG    | parse.py:77 - Return args counts=[1, 1]
+2025-06-28 18:27:01.955 | DEBUG    | code.py:16 - Load code from cache: /home/zachary/sqlfluff/src/sqlfluff/rules/.lambdai/L027_cache_77.py
+2025-06-28 18:27:01.956 | DEBUG    | parse.py:48 - Extracted function names: ['check_alias_reference_lambdai']
+2025-06-28 18:27:01.956 | DEBUG    | parse.py:59 - Function parameters: ['table_aliases', 'standalone_aliases', 'this_ref_type', 'r']
+2025-06-28 18:27:01.956 | DEBUG    | parse.py:77 - Return args counts=[1, 1]
+2025-06-28 18:27:02.044 | DEBUG    | code.py:16 - Load code from cache: /home/zachary/sqlfluff/src/sqlfluff/rules/.lambdai/L027_cache_77.py
+2025-06-28 18:27:02.045 | DEBUG    | code.py:16 - Load code from cache: /home/zachary/sqlfluff/src/sqlfluff/rules/.lambdai/L027_cache_77.py
+2025-06-28 18:27:02.046 | DEBUG    | parse.py:48 - Extracted function names: ['check_alias_reference_lambdai']
+2025-06-28 18:27:02.046 | DEBUG    | parse.py:59 - Function parameters: ['table_aliases', 'standalone_aliases', 'this_ref_type', 'r']
+2025-06-28 18:27:02.046 | DEBUG    | parse.py:77 - Return args counts=[1, 1]
